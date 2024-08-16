@@ -1,0 +1,21 @@
+services:
+    database:
+        container_name: database
+        build:
+            dockerfile: Dockerfile.database
+            context: .
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=1234567890
+        volumes:
+            - database-volume:/var/lib/postgresql/data
+        ports:
+            - 15432:5432
+
+volumes:
+    database-volume:
+        driver: local
+        driver_opts:
+            o: bind
+            type: none
+            device: ./.database

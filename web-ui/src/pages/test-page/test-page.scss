@@ -1,0 +1,12 @@
+.main-test-page-component {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .test-page-content {
+        display: flex;
+        flex: 1;
+        gap: 4px;
+    }
+
+}

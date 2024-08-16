@@ -1,0 +1,16 @@
+{
+    "folders": [
+        {
+            "name": "web-api",
+            "path": "./web-api",
+        },
+        {
+            "name": "web-ui",
+            "path": "./web-ui",
+        },
+        {
+            "name": ".workspace",
+            "path": "./",
+        },
+    ]
+}

@@ -1,0 +1,33 @@
+.main-test-tree-container {
+    display: flex;
+    flex-direction: column;
+
+    .tree-table-container {
+        display: flex;
+        height: 100%;
+        width: 512px;
+        border-radius: 0%;
+        background-color: white;
+
+        .treetable-header-button-container {
+            display: flex;
+            justify-content: end;
+
+            .treetable-header-button {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    }
+}
+
+.p-dropdown-label {
+    display: flex;
+}
+
+.p-dialog-header {
+    .p-dialog-title {
+        padding-left: 12px;
+        text-align: start;
+    }
+}

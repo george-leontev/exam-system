@@ -1,0 +1,33 @@
+
+.dialog-window {
+    width: 600px;
+    height: 400px;
+
+    .dialog-window-content {
+        display: flex;
+        height: 100%;
+        flex-direction: column;
+        gap: 20px;
+        padding: 10px;
+
+        .dialog-window-button-container {
+            display: flex;
+            justify-content: end;
+            align-items: end;
+            flex: 1;
+            padding: 2px;
+
+            .save-test-button {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 40px;
+                width: 10 0px;
+            }
+
+            .p-button {
+                gap: 5px;
+            }
+        }
+    }
+}

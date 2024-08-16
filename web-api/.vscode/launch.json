@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "web-api",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "runserver"
+            ],
+            "django": true,
+            "autoStartBrowser": false,
+            "program": "${workspaceFolder}/exam_system/manage.py"
+        },
+        {
+            "name": "populate-data",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "populate_initial_data"
+            ],
+            "django": true,
+            "autoStartBrowser": false,
+            "program": "${workspaceFolder}/exam_system/manage.py"
+        },
+    ]
+}

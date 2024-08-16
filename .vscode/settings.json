@@ -1,0 +1,16 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/web-api": true,
+        "**/web-ui": true,
+        "**/__pycache__": true
+    },
+    "pylint.args": [
+        "load-plugins=pylint_django"
+    ]
+}

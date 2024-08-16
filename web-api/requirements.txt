@@ -1,0 +1,12 @@
+django
+django-cors-headers
+django-filter
+djangorestframework
+djangorestframework-camel-case
+psycopg[binary]
+
+pylint-djangoIt`s right but I want to send from a client side app json like this:
+{
+"name": "test1",
+"subjectId": 1
+}
