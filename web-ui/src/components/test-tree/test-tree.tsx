@@ -3,19 +3,18 @@ import { useCallback, useState } from 'react';
 import { TreeTable, TreeTableSelectionEvent, TreeTableSelectionKeysType } from 'primereact/treetable';
 import { Column } from 'primereact/column';
 import { TreeNode } from 'primereact/treenode';
-import { ConfirmDialog } from 'primereact/confirmdialog';
+import { Button } from 'primereact/button';
 
 import { TestTreeProps } from '../../models/test-tree-props';
 import { SubjectModel } from '../../models/subject-model';
 import { TestModel } from '../../models/test-model';
 
+import { IoMdMore as MoreIcon } from "react-icons/io";
 import './test-tree.scss';
-import { TreeTableHeaderMenuButton } from './tree-table-header-menu-button';
 
 
-export const TestTree = ({ datasource, onSelect }: TestTreeProps) => {
+export const TestTree = ({ datasource, onSelect, menuTreeRef }: TestTreeProps) => {
     const [selectedKeys, setSelectedKeys] = useState<string | TreeTableSelectionKeysType>();
-
     const buildTreeNodes = useCallback((subjects?: SubjectModel[]) => {
         if (!subjects) {
             return [];
@@ -41,12 +40,13 @@ export const TestTree = ({ datasource, onSelect }: TestTreeProps) => {
 
     return (
         <div className='main-test-tree-container'>
-            <ConfirmDialog />
-
             <TreeTable
                 className="tree-table-container"
                 value={buildTreeNodes(datasource)}
                 selectionMode="single"
+                sortField='entity.id'
+                sortMode='single'
+                sortOrder={-1}
                 selectionKeys={selectedKeys}
                 onSelectionChange={(e: TreeTableSelectionEvent) => {
                     setSelectedKeys(e.value);
@@ -55,7 +55,14 @@ export const TestTree = ({ datasource, onSelect }: TestTreeProps) => {
             >
                 <Column expander field="entity.name" header={() => {
                     return (
-                        <TreeTableHeaderMenuButton />
+                        <div className='treetable-header-button-container'>
+                            <Button
+                                className='treetable-header-button'
+                                onClick={(event) => menuTreeRef.current!.toggle(event)}
+                                aria-haspopup
+                                icon={<MoreIcon className='more-icon' aria-controls="popup_menu_left" />}
+                            />
+                        </div>
                     );
                 }} ></Column>
             </ TreeTable>

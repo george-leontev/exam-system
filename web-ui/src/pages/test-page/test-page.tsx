@@ -1,6 +1,6 @@
 import './test-page.scss'
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { SubjectModel } from "../../models/subject-model";
 import { TestItemModel } from "../../models/test-item-model";
@@ -13,12 +13,22 @@ import { TestEditDialog } from '../../components/test-tree/test-dialog-window';
 import { EntityTreeNodeDataModel } from '../../models/entity-tree-node-data-model';
 import { TestModel } from '../../models/test-model';
 import { TestPageContextProvider, useTestPageContext } from './test-page-context';
+import { confirmDialog } from 'primereact/confirmdialog';
+import { Menu } from 'primereact/menu';
+import { MenuItem } from 'primereact/menuitem';
+import { TestDialogModes } from '../../models/enums/test-dialog-modes';
+import { useAppSharedContext } from '../../contexts/app-shared-context';
+import { v4 as uuidv4 } from 'uuid';
 
 const InnerTestPage = () => {
     const [subjects, setSubjects] = useState<SubjectModel[]>();
     const [testItems, setTestItems] = useState<TestItemModel[]>();
     const { getTestTreeAsync, getTestItemsAsync } = useAppDataContext();
-    const { testDialogMode, testDialogToggle, setTestDialogToggle, selectedNode, setSelectedNode } = useTestPageContext();
+    const { testDialogMode, setTestDialogMode, testDialogToggle, setTestDialogToggle, selectedNode, setSelectedNode } = useTestPageContext();
+    const { deleteTestAsync } = useAppDataContext();
+    const menuTreeRef = useRef<Menu>(null);
+    const { toast } = useAppSharedContext();
+    const [refreshToken, setRefreshToken] = useState<string>(uuidv4());
 
     useEffect(() => {
         (async () => {
@@ -27,14 +37,69 @@ const InnerTestPage = () => {
                 setSubjects(subjects);
             }
         })();
-    }, [getTestTreeAsync]);
+    }, [getTestTreeAsync, refreshToken]);
 
+    const confirm = useCallback(() => {
+        confirmDialog({
+            message: `Do you want to delete "${(selectedNode?.data as EntityTreeNodeDataModel).entity.name}"?`,
+            header: 'Delete Confirmation',
+            icon: 'pi pi-info-circle',
+            defaultFocus: 'reject',
+            acceptClassName: 'p-button-danger',
+            accept: async () => {
+                await deleteTestAsync((selectedNode?.data as EntityTreeNodeDataModel).entity.id);
+                toast.current?.show({
+                    severity: 'info',
+                    summary: 'Confirmed',
+                    detail: `You have deleted the "${(selectedNode?.data as EntityTreeNodeDataModel).entity.name} test".`,
+                    life: 3000
+                });
+                setRefreshToken(uuidv4());
+            },
+            reject: () => {
+                return;
+            }
+        });
+    }, [deleteTestAsync, selectedNode?.data, toast])
+
+    const menuItems = useMemo(() => {
+        return [
+            {
+                label: 'Add...',
+                icon: 'pi pi-plus',
+                command: () => {
+                    setTestDialogToggle(true);
+                    setTestDialogMode(TestDialogModes.add);
+                },
+            },
+            {
+                label: "Edit...",
+                icon: 'pi pi-pencil',
+                command: async () => {
+                    if ((selectedNode?.data as EntityTreeNodeDataModel).entityTypeName === "TestModel") {
+                        setTestDialogToggle(true);
+                        setTestDialogMode(TestDialogModes.edit);
+                    }
+                },
+                disabled: !selectedNode || (selectedNode.data as EntityTreeNodeDataModel).entityTypeName !== "TestModel",
+            },
+            {
+                label: "Delete...",
+                icon: 'pi pi-times',
+                command: async () => {
+                    if ((selectedNode?.data as EntityTreeNodeDataModel).entityTypeName === "TestModel") {
+                        confirm();
+                    }
+
+                },
+                disabled: !selectedNode || (selectedNode.data as EntityTreeNodeDataModel).entityTypeName !== "TestModel",
+            },
+        ] as MenuItem[];
+    }, [confirm, selectedNode, setTestDialogMode, setTestDialogToggle]);
 
     return (
         <div className="main-test-page-component">
             <MainToolBar />
-
-
 
             {testDialogToggle ?
                 <TestEditDialog
@@ -47,7 +112,7 @@ const InnerTestPage = () => {
                         setTestDialogToggle(false);
 
                         if (updatedTest) {
-                            //
+                            setRefreshToken(uuidv4());
                         }
                         console.log(updatedTest);
 
@@ -57,13 +122,21 @@ const InnerTestPage = () => {
 
             <div className="test-page-content">
                 <div style={{ display: 'flex' }}>
-                    <TestTree datasource={subjects} onSelect={async (e) => {
-                        if (e.node.data) {
+                    <Menu
+                        ref={menuTreeRef}
+                        model={menuItems}
+                        popup
+                        popupAlignment="right"
+                    />
+
+                    <TestTree datasource={subjects} menuTreeRef={menuTreeRef} onSelect={async (e) => {
+                        if (e.node.data && e.node.data.entityTypeName === 'TestModel') {
                             const testItems = await getTestItemsAsync(e.node.data.entity.id);
                             setTestItems(testItems);
-                        }
-                        if ((e.node.data as EntityTreeNodeDataModel).entityTypeName === 'TestModel') {
                             setSelectedNode(e.node);
+                        }
+                        else {
+                            setTestItems([]);
                         }
                     }} />
                 </div>

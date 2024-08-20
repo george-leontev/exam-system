@@ -4,6 +4,7 @@ import { TestPage } from './pages/test-page/test-page';
 import { AppDataContextProvider } from './contexts/app-data-context';
 import { Toast } from 'primereact/toast';
 import { useAppSharedContext } from './contexts/app-shared-context';
+import { ConfirmDialog } from 'primereact/confirmdialog';
 
 
 function App() {
@@ -13,10 +14,11 @@ function App() {
     <div style={{ width: '100vw', height: '100vh' }} className="App">
       <BrowserRouter>
         <AppDataContextProvider>
-            <Routes>
-              <Route path='/' element={<TestPage />} />
-            </Routes>
-            <Toast ref={toast} />
+          <Routes>
+            <Route path='/' element={<TestPage />} />
+          </Routes>
+          <Toast ref={toast} />
+          <ConfirmDialog />
         </AppDataContextProvider>
       </BrowserRouter>
     </div>

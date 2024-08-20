@@ -3,10 +3,14 @@ import { createContext, useCallback, useContext } from "react";
 import { SubjectModel } from "../models/subject-model";
 import { TestItemModel } from "../models/test-item-model";
 import { TestModel } from "../models/test-model";
+import { TestItemTypeDataModel } from "../models/test-item-type-data-model";
 export type AppDataContextModel = {
     getSubjectAsync: () => Promise<SubjectModel[] | undefined>;
     getTestTreeAsync: () => Promise<SubjectModel[] | undefined>;
     getTestItemsAsync: (testId: number) => Promise<TestItemModel[] | undefined>;
+    putTestItemAsync: (editedTestItem: TestItemModel) => Promise<TestItemModel | undefined>
+    deleteTestItemAsync: (testItemId: number) => Promise<TestItemModel | undefined>
+    getTestItemTypesAsync: () => Promise<TestItemTypeDataModel[] | undefined>;
     postTestAsync: (editedTest: TestModel) => Promise<TestModel | undefined>;
     deleteTestAsync: (testId: number) => Promise<TestModel | undefined>;
     putTestAsync: (editedTest: TestModel) => Promise<TestModel | undefined>
@@ -64,6 +68,61 @@ function AppDataContextProvider(props: AppDataContextProviderProps) {
 
                 return testItems;
             }
+        } catch (error) {
+            console.log(error);
+        }
+    }, []);
+
+    const putTestItemAsync = useCallback(async (editedTestItem: TestItemModel) => {
+        try {
+            const responce = await axios.request({
+                url: `${webAPIRoot}/test-items/`,
+                method: 'PUT',
+                data: editedTestItem,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (responce && responce.status == 200) {
+                return responce.data as TestItemModel;
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }, []);
+
+    const deleteTestItemAsync = useCallback(async (testItemId: number) => {
+        try {
+            const responce = await axios.request({
+                url: `${webAPIRoot}/test-items/?testItemId=${testItemId}`,
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (responce && responce.status == 200) {
+                return responce.data as TestItemModel;
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }, []);
+
+    const getTestItemTypesAsync = useCallback(async () => {
+        try {
+            const responce = await axios.request({
+                url: `${webAPIRoot}/test-item-types/`,
+                method: 'GET'
+            });
+
+            if (responce && responce.status == 200) {
+                const testItemTypes = responce.data;
+
+                return testItemTypes as TestItemTypeDataModel[];
+            }
+
         } catch (error) {
             console.log(error);
         }
@@ -129,7 +188,15 @@ function AppDataContextProvider(props: AppDataContextProviderProps) {
 
 
     return <AppDataContext.Provider value={{
-        getSubjectAsync, getTestTreeAsync, getTestItemsAsync, postTestAsync, deleteTestAsync, putTestAsync
+        getSubjectAsync,
+        getTestTreeAsync,
+        getTestItemsAsync,
+        putTestItemAsync,
+        deleteTestItemAsync,
+        postTestAsync,
+        deleteTestAsync,
+        putTestAsync,
+        getTestItemTypesAsync
     }} {...props} />;
 }
 

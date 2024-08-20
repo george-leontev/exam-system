@@ -24,6 +24,27 @@ class TestsTreeAPIView(APIView):
 
         return Response(serializer.data)
 
+    def put(self, request: Request):
+        test_id = request.data.get("id")
+
+        if not test_id:
+            return Response(
+                {"detail": "test_id is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            test = TestDataModel.objects.get(id=test_id)
+        except TestDataModel.DoesNotExist:
+            return Response(
+                {"detail": "Test not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = TestDataModelSerializer(test, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)
+
     def delete(self, request: Request):
         test_id = request.query_params.get("test_id")
 
@@ -45,24 +66,3 @@ class TestsTreeAPIView(APIView):
         test.delete()
 
         return Response(serialized_data, status=status.HTTP_200_OK)
-
-    def put(self, request: Request):
-        test_id = request.data.get("id")
-
-        if not test_id:
-            return Response(
-                {"detail": "test_id is required"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            test = TestDataModel.objects.get(id=test_id)
-        except TestDataModel.DoesNotExist:
-            return Response(
-                {"detail": "Test not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-
-        serializer = TestDataModelSerializer(test, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(serializer.data)

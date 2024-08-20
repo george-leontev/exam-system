@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .views.test_item_type_api_view import TestItemTypeAPIView
 from .views.test_create_api_view import TestCreateAPIView
 from .views.subject_list_api_view import SubjectListAPIView
 from .views.tests_tree_api_view import TestsTreeAPIView
@@ -16,6 +17,11 @@ urlpatterns = [
         "test-items/",
         TestItemListAPIView.as_view(),
         name="test-items-api-view",
+    ),
+    path(
+        "test-item-types/",
+        TestItemTypeAPIView.as_view(),
+        name="test-item-api-view",
     ),
     path(
         "subjects/",
