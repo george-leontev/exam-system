@@ -5,7 +5,7 @@ from .test_data_model import TestDataModel
 
 
 class TestItemDataModel(models.Model):
-    id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True) 
     question = models.CharField(max_length=256)
     date = models.DateTimeField(auto_now=True)
 

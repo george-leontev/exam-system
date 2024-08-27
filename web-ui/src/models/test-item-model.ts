@@ -1,5 +1,6 @@
-export type TestItemModel = {
-    id: number;
+import { Entity } from "./entity";
+
+export interface TestItemModel extends Entity {
     question: string;
     date: Date;
     typeId: number;

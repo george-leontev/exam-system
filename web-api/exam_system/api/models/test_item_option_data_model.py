@@ -5,7 +5,7 @@ from .test_item_data_model import TestItemDataModel
 
 class TestItemOptionDataModel(models.Model):
     id = models.AutoField(primary_key=True)
-    content = models.CharField(max_length=64)
+    content = models.CharField(max_length=64, blank=True)
 
     test_item = models.ForeignKey(to=TestItemDataModel, on_delete=models.CASCADE)
 

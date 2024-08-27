@@ -4,7 +4,7 @@ from rest_framework.serializers import ModelSerializer
 from ..models.test_item_data_model import TestItemDataModel
 
 
-class TestItemDataModelSerializer(ModelSerializer):
+class TestItemDataModelSerializer(ModelSerializer): 
     type_id = serializers.IntegerField()
 
     class Meta:

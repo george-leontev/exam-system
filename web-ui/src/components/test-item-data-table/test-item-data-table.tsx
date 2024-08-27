@@ -1,23 +1,28 @@
 import './test-item-data-table.scss'
 
-import { DataTable, DataTableRowEditCompleteEvent, DataTableSelectionSingleChangeEvent } from 'primereact/datatable';
+import { DataTable, DataTableExpandedRows, DataTableRowEditCompleteEvent, DataTableSelectionSingleChangeEvent, DataTableValueArray } from 'primereact/datatable';
 import { Column, ColumnEditorOptions } from 'primereact/column';
 import { TestItemModel } from '../../models/test-item-model';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TestItemDataTableProps } from '../../models/test-item-data-table-props';
 import { useAppDataContext } from '../../contexts/app-data-context';
-import { TestItemTypeDataModel } from '../../models/test-item-type-data-model';
+import { TestItemTypeModel } from '../../models/test-item-type-model';
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
-import { TestItemRowCommandBar } from './test-item-row-command-bar';
+import { TestItemOptionModel } from '../../models/test-item-option-model';
+import { DataTableRowCommandBar } from './data-table-row-command-bar';
+import { TestItemOptionsDataTable } from './test-item-options-data-table';
 
 
 export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
     const [selectedItem, setSelectedItem] = useState<TestItemModel>();
-    const [testItemTypes, setTestItemTypes] = useState<TestItemTypeDataModel[]>();
+    const [testItemTypes, setTestItemTypes] = useState<TestItemTypeModel[]>();
+    const [testItemOptions, setTestItemOptions] = useState<TestItemOptionModel[]>([]);
     const [testItems, setTestItems] = useState<TestItemModel[]>([]);
-    const { getTestItemTypesAsync, putTestItemAsync } = useAppDataContext();
+    const [expandedRows, setExpandedRows] = useState<DataTableExpandedRows | DataTableValueArray | undefined>();
     const dataTableRef = useRef(null);
+
+    const { getTestItemTypesAsync, putTestItemAsync, deleteTestItemAsync, getTestItemOptionsAsync } = useAppDataContext();
 
     useEffect(() => {
         if (datasource) {
@@ -31,7 +36,7 @@ export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
         })();
     }, [datasource, getTestItemTypesAsync]);
 
-    const onRowEditComplete = useCallback(async (e: DataTableRowEditCompleteEvent) => {
+    const onRowEditTestItemComplete = useCallback(async (e: DataTableRowEditCompleteEvent) => {
         const { newData, index } = e;
         const updatingTestItem: TestItemModel = newData as TestItemModel;
         const updatedTestItem = await putTestItemAsync(updatingTestItem);
@@ -44,17 +49,43 @@ export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
         }
     }, [putTestItemAsync]);
 
-
+    const rowExpansionTemplate = (data: TestItemModel) => {
+        return (
+            <TestItemOptionsDataTable datasource={testItemOptions}
+                parentData={data}
+                rowAddCallback={(newData: TestItemOptionModel) => {
+                    setTestItemOptions((prev) => {
+                        return [newData, ...prev];
+                    })
+                }}
+                rowEditCallback={(newData: TestItemOptionModel) => {
+                    setTestItemOptions((prev) => {
+                        const index = prev.findIndex(i => i.id === newData.id);
+                        prev[index] = newData as TestItemOptionModel;
+                        return [...prev];
+                    });
+                }}
+                rowDeleteCallback={(newData: TestItemOptionModel) => {
+                    setTestItemOptions((prev) => {
+                        return prev.filter((t) => {
+                            return (t.id !== newData.id);
+                        });
+                    });
+                }}
+            />
+        );
+    };
 
     return (
         <div className="datatable-container">
-
             <DataTable
                 ref={dataTableRef}
                 value={testItems}
                 dataKey='id'
+                rowExpansionTemplate={rowExpansionTemplate}
+                expandedRows={expandedRows}
                 editMode="row"
-                onRowEditComplete={onRowEditComplete}
+                onRowEditComplete={onRowEditTestItemComplete}
                 selection={selectedItem}
                 selectionMode={'single'}
                 scrollable
@@ -62,9 +93,36 @@ export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
                 showGridlines
                 style={{ width: '100%' }}
                 tableStyle={{ minWidth: '100vh' }}
+                onRowExpand={async (e) => {
+                    const testItemOptions = await getTestItemOptionsAsync(e.data.id);
+                    if (testItemOptions) {
+                        setTestItemOptions(testItemOptions);
+                    }
+                }}
+                onRowToggle={(e) => {
+                    const prevExpandedRowKeys = expandedRows ? Object.keys(expandedRows as object) : [];
+                    let newExpandedRows = { ...e.data };
+                    Object.keys(e.data).forEach((k) => {
+                        if (prevExpandedRowKeys.includes(k)) {
+                            newExpandedRows = Object.fromEntries(Object.entries(newExpandedRows).filter(([key]) => key !== k));
+                        }
+                    });
+
+                    setExpandedRows(newExpandedRows);
+                }}
                 onSelectionChange={(e: DataTableSelectionSingleChangeEvent<TestItemModel[]>) => {
                     setSelectedItem(e.value);
                 }}>
+                <Column style={{ display: 'none' }} body={(data) => {
+                    return (
+                        <input data-id={data.id} type='hidden' />
+                    );
+                }} />
+                <Column
+                    rowEditor
+                    style={{ display: 'none' }}
+                />
+                <Column expander />
                 <Column field="id" header="Id" />
                 <Column
                     field="question"
@@ -105,22 +163,22 @@ export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
                         </>
                     );
                 }} />
-                <Column
-                    rowEditor
-                    style={{ display: 'none' }}
-                />
+
                 <Column
                     rowEditor
                     headerStyle={{ width: '10%', minWidth: '8rem' }}
                     bodyStyle={{ textAlign: 'center' }}
-                    body={(data, opt) => {
+                    body={(data) => {
                         return (
-                            <TestItemRowCommandBar options={opt} data={data as TestItemModel} deleteCallback={() => {
-                                setTestItems((prev) => {
-                                    return prev.filter((t) => {
-                                        return (t.id !== data.id);
-                                    })
-                                });
+                            <DataTableRowCommandBar data={data as TestItemModel} deleteCallback={async () => {
+                                const deletedTestItem = await deleteTestItemAsync((data as TestItemModel).id);
+                                if (deletedTestItem) {
+                                    setTestItems((prev) => {
+                                        return prev.filter((t) => {
+                                            return (t.id !== data.id);
+                                        });
+                                    });
+                                }
                             }} />
                         );
                     }}

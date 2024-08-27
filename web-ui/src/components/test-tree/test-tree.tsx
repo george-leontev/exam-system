@@ -58,9 +58,9 @@ export const TestTree = ({ datasource, onSelect, menuTreeRef }: TestTreeProps) =
                         <div className='treetable-header-button-container'>
                             <Button
                                 className='treetable-header-button'
-                                onClick={(event) => menuTreeRef.current!.toggle(event)}
-                                aria-haspopup
                                 icon={<MoreIcon className='more-icon' aria-controls="popup_menu_left" />}
+                                aria-haspopup
+                                onClick={(event) => menuTreeRef.current!.toggle(event)}
                             />
                         </div>
                     );

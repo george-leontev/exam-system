@@ -21,7 +21,7 @@ export const TestEditDialog = ({ mode, onHide, editedTest }: TestDialogProps) =>
         id: 0,
         name: '',
         subjectId: 0,
-    } as TestModel); 
+    } as TestModel);
 
     useEffect(() => {
         (async () => {

@@ -68,10 +68,35 @@ class Command(BaseCommand):
             name="Test 4 (grade 4)", subject=russian
         )
 
-        for i in range(1, 200):
-            TestItemDataModel.objects.create(
+        for i in range(1, 100):
+            test_item = TestItemDataModel.objects.create(
                 question="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-                test=random.choice([rus_test_1, rus_test_2, rus_test_3, rus_test_4, maths_test_1, maths_test_2, maths_test_3]),
+                test=random.choice(
+                    [
+                        rus_test_1,
+                        rus_test_2,
+                        rus_test_3,
+                        rus_test_4,
+                        maths_test_1,
+                        maths_test_2,
+                        maths_test_3,
+                    ]
+                ),
                 type=random.choice([text_type, single_type, multiple_type]),
                 date=datetime.now(),
             )
+
+            if test_item.type == single_type:
+                for i in range(1, random.randint(3, 10)):
+                    TestItemOptionDataModel.objects.create(
+                        content="Who are you?", test_item=test_item
+                    )
+            elif test_item.type == multiple_type:
+                for i in range(1, random.randint(4, 10)):
+                    TestItemOptionDataModel.objects.create(
+                        content="Who are you?", test_item=test_item
+                    )
+            else:
+                TestItemOptionDataModel.objects.create(
+                    content="Who are you?", test_item=test_item
+                )

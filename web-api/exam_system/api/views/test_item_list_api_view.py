@@ -52,7 +52,8 @@ class TestItemListAPIView(ListAPIView):
             test_item = TestItemDataModel.objects.get(id=test_item_id)
         except TestItemDataModel.DoesNotExist:
             return Response(
-                {"detail": "Testitem not found"}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Testitem not found"},
+                status=status.HTTP_404_NOT_FOUND
             )
 
         serializer = TestItemDataModelSerializer(test_item)
