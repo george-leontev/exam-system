@@ -12,9 +12,13 @@ import { InputText } from 'primereact/inputtext';
 import { TestItemOptionModel } from '../../models/test-item-option-model';
 import { DataTableRowCommandBar } from './data-table-row-command-bar';
 import { TestItemOptionsDataTable } from './test-item-options-data-table';
+import { Button } from 'primereact/button';
+import { getNearestParentByNodeName } from '../../utils/dom';
+import { useTestPageContext } from '../../pages/test-page/test-page-context';
+import { useAppSharedContext } from '../../contexts/app-shared-context';
 
 
-export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
+export const TestItemDataTable = ({ datasource, activeTest }: TestItemDataTableProps) => {
     const [selectedItem, setSelectedItem] = useState<TestItemModel>();
     const [testItemTypes, setTestItemTypes] = useState<TestItemTypeModel[]>();
     const [testItemOptions, setTestItemOptions] = useState<TestItemOptionModel[]>([]);
@@ -22,7 +26,9 @@ export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
     const [expandedRows, setExpandedRows] = useState<DataTableExpandedRows | DataTableValueArray | undefined>();
     const dataTableRef = useRef(null);
 
-    const { getTestItemTypesAsync, putTestItemAsync, deleteTestItemAsync, getTestItemOptionsAsync } = useAppDataContext();
+    const { toast } = useAppSharedContext();
+    const { possibilityOfAddingEditingTestItem, setPossibilityOfAddingEditingTestItem, possibilityOfAddingEditingTestItemOption } = useTestPageContext();
+    const { getTestItemTypesAsync, postTestItemAsync, putTestItemAsync, deleteTestItemAsync, getTestItemOptionsAsync } = useAppDataContext();
 
     useEffect(() => {
         if (datasource) {
@@ -56,7 +62,7 @@ export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
                 rowAddCallback={(newData: TestItemOptionModel) => {
                     setTestItemOptions((prev) => {
                         return [newData, ...prev];
-                    })
+                    });
                 }}
                 rowEditCallback={(newData: TestItemOptionModel) => {
                     setTestItemOptions((prev) => {
@@ -91,15 +97,32 @@ export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
                 scrollable
                 scrollHeight='100vh'
                 showGridlines
+                sortField="id"
+                sortOrder={-1}
                 style={{ width: '100%' }}
                 tableStyle={{ minWidth: '100vh' }}
                 onRowExpand={async (e) => {
+                    if (!possibilityOfAddingEditingTestItemOption) {
+                        toast.current?.show({
+                            severity: 'error',
+                            summary: 'Not allowed',
+                            detail: 'You cannot expand an test item while you are creating or editing another item.',
+                            life: 3500
+                        });
+
+                        return;
+                    }
+
                     const testItemOptions = await getTestItemOptionsAsync(e.data.id);
                     if (testItemOptions) {
                         setTestItemOptions(testItemOptions);
                     }
                 }}
                 onRowToggle={(e) => {
+                    if (!possibilityOfAddingEditingTestItemOption) {
+                        return;
+                    }
+
                     const prevExpandedRowKeys = expandedRows ? Object.keys(expandedRows as object) : [];
                     let newExpandedRows = { ...e.data };
                     Object.keys(e.data).forEach((k) => {
@@ -113,20 +136,94 @@ export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
                 onSelectionChange={(e: DataTableSelectionSingleChangeEvent<TestItemModel[]>) => {
                     setSelectedItem(e.value);
                 }}>
-                <Column style={{ display: 'none' }} body={(data) => {
-                    return (
-                        <input data-id={data.id} type='hidden' />
-                    );
-                }} />
+                <Column
+                    style={{ display: 'none' }}
+                    body={(data) => {
+                        return (
+                            <input data-id={data.id} type='hidden' />
+                        );
+                    }} />
                 <Column
                     rowEditor
                     style={{ display: 'none' }}
                 />
-                <Column expander />
+                <Column
+                    expander
+                    header={() => {
+                        return (
+                            <Button
+                                icon="pi pi-plus"
+                                className='default-button-icon'
+                                onClick={async (e) => {
+
+                                    if (!possibilityOfAddingEditingTestItem || !possibilityOfAddingEditingTestItemOption) {
+                                        toast.current?.show({
+                                            severity: 'error',
+                                            summary: 'Not allowed',
+                                            detail: 'You cannot add an item while you are creating or editing another item.',
+                                            life: 3500
+                                        });
+
+                                        return;
+                                    }
+
+                                    setPossibilityOfAddingEditingTestItem(false);
+
+                                    const updatedTestItem = await postTestItemAsync({
+                                        id: 0,
+                                        question: 'Default value',
+                                        date: new Date(),
+                                        testId: activeTest!.id,
+                                        typeId: 1
+                                    });
+
+                                    if (updatedTestItem) {
+                                        setTestItems((prev) => {
+                                            return [updatedTestItem, ...prev];
+                                        });
+                                    }
+
+
+                                    const table = getNearestParentByNodeName(e.target as HTMLElement, 'TABLE');
+                                    if (!table) {
+                                        return;
+                                    }
+                                    setTimeout(() => {
+                                        const rowElement = table.querySelector(`td input[data-id="${updatedTestItem!.id}"]`)?.parentElement?.parentElement;
+                                        if (!rowElement) {
+                                            return;
+                                        }
+
+
+                                        (table.querySelector(`[data-p-row-editor-init].p-row-editor-init`) as HTMLElement).click();
+                                        setTimeout(() => {
+                                            const inputTextElement = rowElement.querySelector('.p-inputtext') as HTMLInputElement;
+                                            inputTextElement.focus();
+                                            inputTextElement.select();
+                                            inputTextElement.setAttribute("data-first-edit", "");
+                                        }, 0);
+
+                                        const commandWrapper = rowElement.querySelector(`[data-command-bar="${updatedTestItem!.id}"]`);
+                                        if (commandWrapper) {
+                                            const commands = [
+                                                { command: "cancel", display: "inline-flex" },
+                                                { command: "save", display: "inline-flex" },
+                                                { command: "delete", display: "none" },
+                                                { command: "edit", display: "none" }
+                                            ];
+                                            commands.forEach(c => {
+                                                ((commandWrapper.querySelector(`[data-command="${c.command}"]`)) as HTMLElement).style.display = c.display;
+                                            });
+                                        }
+                                    }, 0)
+                                }} />
+                        );
+                    }} />
                 <Column field="id" header="Id" />
                 <Column
                     field="question"
                     header="Question"
+                    style={{ width: '80%' }}
                     editor={(options: ColumnEditorOptions) => {
                         return (
                             <InputText
@@ -156,13 +253,16 @@ export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
                             />
                         );
                     }} />
-                <Column field='date' header='Date' body={(data: TestItemModel) => {
-                    return (
-                        <>
-                            {(new Date(data.date)).toLocaleString('ru-RU')}
-                        </>
-                    );
-                }} />
+                <Column
+                    field='date'
+                    header='Date'
+                    body={(data: TestItemModel) => {
+                        return (
+                            <>
+                                {(new Date(data.date)).toLocaleString('ru-RU')}
+                            </>
+                        );
+                    }} />
 
                 <Column
                     rowEditor
@@ -170,16 +270,18 @@ export const TestItemDataTable = ({ datasource }: TestItemDataTableProps) => {
                     bodyStyle={{ textAlign: 'center' }}
                     body={(data) => {
                         return (
-                            <DataTableRowCommandBar data={data as TestItemModel} deleteCallback={async () => {
-                                const deletedTestItem = await deleteTestItemAsync((data as TestItemModel).id);
-                                if (deletedTestItem) {
-                                    setTestItems((prev) => {
-                                        return prev.filter((t) => {
-                                            return (t.id !== data.id);
+                            <DataTableRowCommandBar
+                                data={data as TestItemModel}
+                                deleteCallback={async () => {
+                                    const deletedTestItem = await deleteTestItemAsync((data as TestItemModel).id);
+                                    if (deletedTestItem) {
+                                        setTestItems((prev) => {
+                                            return prev.filter((t) => {
+                                                return (t.id !== data.id);
+                                            });
                                         });
-                                    });
-                                }
-                            }} />
+                                    }
+                                }} />
                         );
                     }}
                 />

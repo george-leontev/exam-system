@@ -11,6 +11,12 @@ export type TestPageContextModel = {
 
     testDialogToggle: boolean;
     setTestDialogToggle: Dispatch<SetStateAction<boolean>>;
+
+    possibilityOfAddingEditingTestItem: boolean;
+    setPossibilityOfAddingEditingTestItem: Dispatch<SetStateAction<boolean>>;
+
+    possibilityOfAddingEditingTestItemOption: boolean;
+    setPossibilityOfAddingEditingTestItemOption: Dispatch<SetStateAction<boolean>>;
 }
 
 const TestPageContext = createContext({} as TestPageContextModel);
@@ -20,7 +26,21 @@ function TestPageContextProvider(props: object) {
     const [selectedNode, setSelectedNode] = useState<TreeNode>();
     const [testDialogToggle, setTestDialogToggle] = useState(false);
 
-    return <TestPageContext.Provider value={{ testDialogMode, setTestDialogMode, selectedNode, setSelectedNode, testDialogToggle, setTestDialogToggle }} {...props} />;
+    const [possibilityOfAddingEditingTestItem, setPossibilityOfAddingEditingTestItem] = useState<boolean>(true);
+    const [possibilityOfAddingEditingTestItemOption, setPossibilityOfAddingEditingTestItemOption] = useState<boolean>(true);
+
+    return <TestPageContext.Provider value={{
+        testDialogMode,
+        setTestDialogMode,
+        selectedNode,
+        setSelectedNode,
+        testDialogToggle,
+        setTestDialogToggle,
+        possibilityOfAddingEditingTestItem,
+        setPossibilityOfAddingEditingTestItem,
+        possibilityOfAddingEditingTestItemOption,
+        setPossibilityOfAddingEditingTestItemOption
+    }} {...props} />;
 }
 const useTestPageContext = () => useContext(TestPageContext);
 

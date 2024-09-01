@@ -12,6 +12,7 @@ export type AppDataContextModel = {
     deleteTestAsync: (testId: number) => Promise<TestModel | undefined>;
     putTestAsync: (editedTest: TestModel) => Promise<TestModel | undefined>
     getTestItemsAsync: (testId: number) => Promise<TestItemModel[] | undefined>;
+    postTestItemAsync: (editedTestItem: TestItemModel) => Promise<TestItemModel | undefined>;
     putTestItemAsync: (editedTestItem: TestItemModel) => Promise<TestItemModel | undefined>
     deleteTestItemAsync: (testItemId: number) => Promise<TestItemModel | undefined>
     getTestItemTypesAsync: () => Promise<TestItemTypeModel[] | undefined>;
@@ -130,6 +131,27 @@ function AppDataContextProvider(props: AppDataContextProviderProps) {
                 const testItems = response.data as TestItemModel[];
 
                 return testItems;
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }, []);
+
+    const postTestItemAsync = useCallback(async (editedTestItem: TestItemModel) => {
+        try {
+            const response = await axios.request({
+                url: `${webAPIRoot}/test-items/?withOptions`,
+                method: 'POST',
+                data: editedTestItem,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response && response.status == 200) {
+                const editedTestItem = response.data as TestItemModel;
+
+                return editedTestItem;
             }
         } catch (error) {
             console.log(error);
@@ -268,6 +290,7 @@ function AppDataContextProvider(props: AppDataContextProviderProps) {
         deleteTestAsync,
         putTestAsync,
         getTestItemsAsync,
+        postTestItemAsync,
         putTestItemAsync,
         deleteTestItemAsync,
         getTestItemTypesAsync,

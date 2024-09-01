@@ -57,8 +57,8 @@ export const TestTree = ({ datasource, onSelect, menuTreeRef }: TestTreeProps) =
                     return (
                         <div className='treetable-header-button-container'>
                             <Button
-                                className='treetable-header-button'
-                                icon={<MoreIcon className='more-icon' aria-controls="popup_menu_left" />}
+                                className='default-button-icon'
+                                icon={<MoreIcon style={{height: '26px', width: '26px'}} aria-controls="popup_menu_left" />}
                                 aria-haspopup
                                 onClick={(event) => menuTreeRef.current!.toggle(event)}
                             />

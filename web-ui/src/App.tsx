@@ -11,7 +11,7 @@ function App() {
   const { toast } = useAppSharedContext();
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }} className="App">
+    <div style={{ width: '100vw', height: '100%' }} className="App">
       <BrowserRouter>
         <AppDataContextProvider>
           <Routes>

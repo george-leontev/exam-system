@@ -74,14 +74,7 @@ class TestItemOptionAPIView(ListAPIView):
 
     def post(self, request: Request):
         serializer = TestItemOptionDataModelSerializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except  Exception as ex:
-
-            return Response(
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
+        serializer.is_valid(raise_exception=True)
         serializer.save()
 
         return Response(serializer.data)

@@ -5,8 +5,8 @@ from .test_data_model import TestDataModel
 
 
 class TestItemDataModel(models.Model):
-    id = models.AutoField(primary_key=True) 
-    question = models.CharField(max_length=256)
+    id = models.AutoField(primary_key=True)
+    question = models.CharField(max_length=256, blank=True)
     date = models.DateTimeField(auto_now=True)
 
     type = models.ForeignKey(to=TestItemTypeDataModel, on_delete=models.CASCADE)

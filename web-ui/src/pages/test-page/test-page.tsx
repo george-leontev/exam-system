@@ -23,6 +23,7 @@ import { v4 as uuidv4 } from 'uuid';
 const InnerTestPage = () => {
     const [subjects, setSubjects] = useState<SubjectModel[]>();
     const [testItems, setTestItems] = useState<TestItemModel[]>();
+    const [activeTest, setActiveTest] = useState<TestModel>();
     const { getTestTreeAsync, getTestItemsAsync } = useAppDataContext();
     const { testDialogMode, setTestDialogMode, testDialogToggle, setTestDialogToggle, selectedNode, setSelectedNode } = useTestPageContext();
     const { deleteTestAsync } = useAppDataContext();
@@ -51,8 +52,8 @@ const InnerTestPage = () => {
                 toast.current?.show({
                     severity: 'info',
                     summary: 'Confirmed',
-                    detail: `You have deleted the "${(selectedNode?.data as EntityTreeNodeDataModel).entity.name} test".`,
-                    life: 3000
+                    detail: `You have deleted the "${(selectedNode?.data as EntityTreeNodeDataModel).entity.name}".`,
+                    life: 3500
                 });
                 setRefreshToken(uuidv4());
             },
@@ -131,6 +132,9 @@ const InnerTestPage = () => {
 
                     <TestTree datasource={subjects} menuTreeRef={menuTreeRef} onSelect={async (e) => {
                         if (e.node.data && e.node.data.entityTypeName === 'TestModel') {
+                            setActiveTest(e.node.data.entity);
+
+
                             const testItems = await getTestItemsAsync(e.node.data.entity.id);
                             setTestItems(testItems);
                             setSelectedNode(e.node);
@@ -141,7 +145,7 @@ const InnerTestPage = () => {
                     }} />
                 </div>
 
-                <TestItemDataTable datasource={testItems} />
+                <TestItemDataTable datasource={testItems} activeTest={activeTest} />
             </div>
         </div>
     )

@@ -3,12 +3,14 @@ import { createContext, RefObject, useContext, useRef } from "react"
 
 export type AppSharedContextModel = {
     toast: RefObject<Toast>;
+
 }
 
 const AppSharedContext = createContext({} as AppSharedContextModel);
 
 function AppSharedContextProvider(props: object) {
     const toast = useRef<Toast>(null);
+
 
     return <AppSharedContext.Provider value={{ toast }} {...props}></AppSharedContext.Provider>
 }

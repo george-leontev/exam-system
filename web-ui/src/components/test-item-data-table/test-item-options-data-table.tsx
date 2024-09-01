@@ -3,9 +3,9 @@ import { Column, ColumnEditorOptions } from "primereact/column";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 
-import { PiTextboxBold as TextTypeIcon } from "react-icons/pi";
-import { RiCheckboxMultipleLine as MultipleTypeIcon } from "react-icons/ri";
-import { BsUiRadios as SingleTypeIcon } from "react-icons/bs";
+import { MdOutlineTextSnippet as TextTypeIcon } from "react-icons/md";
+import { IoMdCheckboxOutline as MultipleTypeIcon } from "react-icons/io";
+import { IoMdRadioButtonOff as SingleTypeIcon } from "react-icons/io";
 
 import { useAppDataContext } from "../../contexts/app-data-context";
 import { useCallback } from "react";
@@ -13,9 +13,13 @@ import { TestItemOptionModel } from "../../models/test-item-option-model";
 import { DataTableRowCommandBar } from "./data-table-row-command-bar";
 import { TestItemOptionsDataTableProps } from "../../models/test-item-options-data-table-props";
 import { getNearestParentByNodeName } from "../../utils/dom";
+import { useTestPageContext } from "../../pages/test-page/test-page-context";
+import { useAppSharedContext } from "../../contexts/app-shared-context";
 
 
 export const TestItemOptionsDataTable = ({ datasource, parentData, rowEditCallback, rowAddCallback, rowDeleteCallback }: TestItemOptionsDataTableProps) => {
+    const { toast } = useAppSharedContext();
+    const { possibilityOfAddingEditingTestItemOption, setPossibilityOfAddingEditingTestItemOption, possibilityOfAddingEditingTestItem } = useTestPageContext();
     const { putTestItemOptionsAsync, deleteTestItemOptionsAsync, postTestItemOptionAsync } = useAppDataContext();
 
     const onRowEditCompleteHandler = useCallback(async (e: DataTableRowEditCompleteEvent) => {
@@ -41,6 +45,8 @@ export const TestItemOptionsDataTable = ({ datasource, parentData, rowEditCallba
             <DataTable
                 value={datasource}
                 dataKey='id'
+                sortField="id"
+                sortOrder={-1}
                 editMode="row"
                 onRowEditComplete={onRowEditCompleteHandler}
             >
@@ -57,12 +63,25 @@ export const TestItemOptionsDataTable = ({ datasource, parentData, rowEditCallba
                     style={{ width: '14px' }}
                     body={renderIcon(parentData.typeId)}
                     header={() => {
-
                         return (
-                            <Button icon="pi pi-plus" onClick={async (e) => {
+                            <Button icon="pi pi-plus" className="default-button-icon" onClick={async (e) => {
+
+                                if (!possibilityOfAddingEditingTestItemOption || !possibilityOfAddingEditingTestItem) {
+                                    toast.current?.show({
+                                        severity: 'error',
+                                        summary: 'Not allowed',
+                                        detail: 'You cannot add an item while you are creating or editing another item.',
+                                        life: 3500
+                                    });
+
+                                    return;
+                                }
+
+                                setPossibilityOfAddingEditingTestItemOption(false);
+
                                 const updatedTestItemOption = await postTestItemOptionAsync({
                                     id: 0,
-                                    content: '',
+                                    content: 'Default value',
                                     testItemId: parentData.id
                                 });
                                 if (updatedTestItemOption && rowAddCallback) {
@@ -82,14 +101,17 @@ export const TestItemOptionsDataTable = ({ datasource, parentData, rowEditCallba
 
                                     (rowElement.querySelector(`[data-p-row-editor-init].p-row-editor-init`) as HTMLElement).click();
                                     setTimeout(() => {
-                                        (rowElement.querySelector('.p-inputtext') as HTMLElement).focus();
+                                        const inputTextElement = rowElement.querySelector('.p-inputtext') as HTMLInputElement;
+                                        inputTextElement.focus();
+                                        inputTextElement.select();
+                                        inputTextElement.setAttribute("data-first-edit", "");
                                     }, 100)
 
                                     const commandWrapper = rowElement.querySelector(`[data-command-bar="${updatedTestItemOption!.id}"]`);
                                     if (commandWrapper) {
                                         const commands = [
-                                            { command: "cancel", display: "initial" },
-                                            { command: "save", display: "initial" },
+                                            { command: "cancel", display: "inline-flex" },
+                                            { command: "save", display: "inline-flex" },
                                             { command: "delete", display: "none" },
                                             { command: "edit", display: "none" }
                                         ];
@@ -98,11 +120,11 @@ export const TestItemOptionsDataTable = ({ datasource, parentData, rowEditCallba
                                         });
                                     }
                                 }, 100);
-
-
                             }} />
                         );
-                    }} />
+                    }
+
+                    } />
                 <Column
                     field='content'
                     header='Options'
